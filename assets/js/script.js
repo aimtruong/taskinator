@@ -7,7 +7,6 @@ var pageContentEl = document.querySelector("#page-content");
 var tasksInProgressEl = document.querySelector("#tasks-in-progress");
 var tasksCompletedEl = document.querySelector("#tasks-completed");
 
-
 var taskFormHandler = function(event){
     event.preventDefault();
 
@@ -39,8 +38,7 @@ var taskFormHandler = function(event){
             type: taskTypeInput,
             status: "to do"
         };
-        console.log(taskDataObj);
-        console.log(taskDataObj.status);
+
         // send it as an argument to createTaskEl
         createTaskEl(taskDataObj);
     };
@@ -61,10 +59,26 @@ var createTaskEl = function(taskDataObj){
 
     var taskActionsEl = createTaskActions(taskIdCounter);
         listItemEl.appendChild(taskActionsEl);
-        tasksToDoEl.appendChild(listItemEl);
+        
+    switch(taskDataObj.status){
+        case "to do":
+            tasksActionsEl.querySelector("select[name='status-change']").selectedIndex = 0;
+            tasksToDoEl.appendChild(listItemEl);
+            break;
+        
+        case "in progress":
+            taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 1;
+            tasksInProgressEl.append(listItemEl);
+            break;
 
-    // add entire list item to list
-    tasksToDoEl.appendChild(listItemEl);
+        case "completed":
+            taskActionsEl.querySelector("select[name='status-change']").selectedIndex = 2;
+            tasksCompletedEl.append(listItemEl);
+            break;
+
+        default:
+            console.log("Something went wrong!");
+    };
 
     taskDataObj.id = taskIdCounter;
     tasks.push(taskDataObj);
@@ -165,11 +179,11 @@ var taskStatusChangeHandler = function(event){
     // get the task item's id
     var taskId = event.target.getAttribute("data-task-id");
 
-    // get the currently selected option's value and convert to lowercase
-    var statusValue = event.target.value.toLowerCase();
-
     // find the parent task item element based on the id
     var taskSelected = document.querySelector(".task-item[data-task-id='" + taskId + "']");
+
+    // get the currently selected option's value and convert to lowercase
+    var statusValue = event.target.value.toLowerCase();
 
     if(statusValue === "to do"){
         tasksToDoEl.appendChild(taskSelected);
@@ -197,7 +211,7 @@ var editTask = function(taskId){
 
     // get content from task name and type
     var taskName = taskSelected.querySelector("h3.task-name").textContent;
-    console.log(taskName);
+        console.log(taskName);
 
     var taskType = taskSelected.querySelector("span.task-type").textContent;
         console.log(taskType);
@@ -236,6 +250,24 @@ var saveTasks = function(){
     localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+var loadTasks = function(){
+    var savedTasks = localStorage.getItem("tasks");
+    
+    // if no tasks, set tasks to empty array and return out of function
+    if(!savedTasks){
+        return false;
+    };
+
+    // parse into array of objects
+    savedTasks = JSON.parse(savedTasks);
+
+    // loop through savedTasks array
+    for(var i = 0; i < savedTasks.length; i++){
+        // pass into createTaskEl function
+        createTaskEl(savedTasks[i]);
+    };
+};
+
 
 formEl.addEventListener("submit", taskFormHandler);
 
@@ -243,4 +275,4 @@ pageContentEl.addEventListener("click", taskButtonHandler);
 
 pageContentEl.addEventListener("change", taskStatusChangeHandler);
 
-
+loadTasks();
